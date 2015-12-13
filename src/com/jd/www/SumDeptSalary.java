@@ -78,19 +78,16 @@ public class SumDeptSalary {
 
 		@Override
 		protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-			if (!value.equals("") || value != null) {
-				String[] columns = value.toString().split(",");
-				FileSplit fileSplit = (FileSplit) context.getInputSplit();
-				String filename = fileSplit.getPath().getName();
-				context.getCounter("USEGROUPREDUCER", filename).increment(1);
-				if ("dept".equals(filename)) {
-					if (columns.length == 3) {
-						context.write(new Text(columns[0]), new Text("dept+" + columns[1]));
-					}
-				} else if ("emp".equals(filename)) {
-					if (columns.length == 8) {
-						context.write(new Text(columns[7]), new Text("emp+" + columns[5]));
-					}
+			String[] columns = value.toString().split(",");
+			FileSplit fileSplit = (FileSplit) context.getInputSplit();
+			String filename = fileSplit.getPath().getName();
+			if ("dept".equals(filename)) {
+				if (columns.length == 3) {
+					context.write(new Text(columns[0]), new Text("dept+" + columns[1]));
+				}
+			} else if ("emp".equals(filename)) {
+				if (columns.length == 8) {
+					context.write(new Text(columns[7]), new Text("emp+" + columns[5]));
 				}
 			}
 		}
