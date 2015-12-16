@@ -13,17 +13,20 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -54,7 +57,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
  */
 
 public class SumDeptSalary2 {
-	public void run(String[] args) throws IOException, InterruptedException, ClassNotFoundException {
+	@SuppressWarnings("deprecation")
+	public void run(String[] args) throws IOException, InterruptedException, ClassNotFoundException, URISyntaxException {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "SumDeptSalary2");
 		job.setJarByClass(com.jd.www.SumDeptSalary2.class);
@@ -66,7 +70,8 @@ public class SumDeptSalary2 {
 		job.setOutputValueClass(Text.class);
 
 		// TODO: specify input and output DIRECTORIES (not files)
-		//DistributedCache.addCacheFile(new Path("/in/dept").toUri(), conf);
+		//DistributedCache.addCacheFile(new URI("/in/dept"), jobconf);
+		DistributedCache.addCacheFile(new URI("hdfs://http://192.168.181.128/:9000/in/dept"), conf);
 		FileInputFormat.setInputPaths(job, new Path("/in"));
 		FileOutputFormat.setOutputPath(job, new Path("/out"));
 
