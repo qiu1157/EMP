@@ -10,10 +10,8 @@
 package com.jd.www;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,13 +20,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 /**
@@ -58,7 +53,8 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class SumDeptSalary2 {
 	@SuppressWarnings("deprecation")
-	public void run(String[] args) throws IOException, InterruptedException, ClassNotFoundException, URISyntaxException {
+	public void run(String[] args)
+			throws IOException, InterruptedException, ClassNotFoundException, URISyntaxException {
 		Configuration conf = new Configuration();
 		Job job = Job.getInstance(conf, "SumDeptSalary2");
 		job.setJarByClass(com.jd.www.SumDeptSalary2.class);
@@ -70,9 +66,10 @@ public class SumDeptSalary2 {
 		job.setOutputValueClass(Text.class);
 
 		// TODO: specify input and output DIRECTORIES (not files)
-		//DistributedCache.addCacheFile(new URI("/in/dept"), jobconf);
-		DistributedCache.addCacheFile(new URI("hdfs://http://192.168.181.128/:9000/in/dept"), conf);
-		FileInputFormat.setInputPaths(job, new Path("/in"));
+		//DistruibuteCache已经过时,采用job.addCacheFile()方法
+		//DistributedCache.addCacheFile(new Path("/in/dept").toUri(), job.getConfiguration());
+		job.addCacheFile(new Path("/in/dept").toUri());
+		FileInputFormat.setInputPaths(job, new Path("/in/emp"));
 		FileOutputFormat.setOutputPath(job, new Path("/out"));
 
 		if (!job.waitForCompletion(true))
@@ -106,7 +103,7 @@ public class SumDeptSalary2 {
 		 */
 
 		@Override
-		protected void map(Object key, Text value, Mapper<Object, Text, Text, Text>.Context context)
+		protected void map(Object key, Text value, Context context)
 				throws IOException, InterruptedException {
 			String[] columns = value.toString().split(",");
 			if (columns.length == 8) {
@@ -131,39 +128,32 @@ public class SumDeptSalary2 {
 		 */
 
 		@Override
-		protected void setup(Context context) {
-			// TODO Auto-generated method stub
-			FileSplit fileSplit = (FileSplit) context.getInputSplit();
-			String fileName = fileSplit.getPath().getName();
+		protected void setup(Context context) throws IOException {
 			BufferedReader in = null;
-			String line = null;
-			context.getCounter("USEGROUPMAP", fileName).increment(1);
 			try {
-				if (fileName.contains("dept")) {
-					in = new BufferedReader(new FileReader(fileSplit.getPath().toString()));
-					while ((line = in.readLine()) != null) {
-						context.getCounter("USEGROUPMAP", line).increment(1);
-						deptMap.put(line.split(",")[0], line.split(",")[1]);
+				//Path[] paths = DistributedCache.getLocalCacheFiles(context.getConfiguration());
+				Path[] paths = context.getLocalCacheFiles();
+				String line = null;
+				if (paths != null ) {
+					for (Path path : paths) {
+						if (path.toString().contains("dept")) {
+							in = new BufferedReader(new FileReader(path.toString()));
+							while (null != (line = in.readLine())) {
+								deptMap.put(line.split(",")[0], line.split(",")[1]);
+							}
+						}
 					}
+				} else {
+					context.getCounter("USERGROUPMAP", "PATHS IS NULL").increment(1);
+					return;
 				}
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			} finally {
-				try {
-					if (null != in) {
-						in.close();
-					}
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				// TODO: handle finally clause
+				if(in != null) {
+					in.close();
 				}
 			}
 		}
-
 	}
 
 	public static class MyReducer extends Reducer<Text, Text, Text, IntWritable> {
@@ -189,7 +179,7 @@ public class SumDeptSalary2 {
 		protected void reduce(Text key, Iterable<Text> values, Context context)
 				throws IOException, InterruptedException {
 			int sum = 0;
-			for(Text val : values) {
+			for (Text val : values) {
 				sum += Integer.parseInt(val.toString());
 			}
 			context.write(key, new IntWritable(sum));
