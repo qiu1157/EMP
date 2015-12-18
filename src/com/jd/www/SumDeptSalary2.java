@@ -12,6 +12,7 @@ package com.jd.www;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,11 +131,10 @@ public class SumDeptSalary2 {
 		@Override
 		protected void setup(Context context) throws IOException {
 			BufferedReader in = null;
+			String line = null;
+			Path[] paths = context.getLocalCacheFiles();
 			try {
-				//Path[] paths = DistributedCache.getLocalCacheFiles(context.getConfiguration());
-				Path[] paths = context.getLocalCacheFiles();
-				String line = null;
-				if (paths != null ) {
+				if (null != paths) {
 					for (Path path : paths) {
 						if (path.toString().contains("dept")) {
 							in = new BufferedReader(new FileReader(path.toString()));
@@ -143,9 +143,6 @@ public class SumDeptSalary2 {
 							}
 						}
 					}
-				} else {
-					context.getCounter("USERGROUPMAP", "PATHS IS NULL").increment(1);
-					return;
 				}
 			} finally {
 				// TODO: handle finally clause

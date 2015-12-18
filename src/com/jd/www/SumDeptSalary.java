@@ -50,8 +50,8 @@ public class SumDeptSalary {
 		job.setOutputValueClass(Text.class);
 
 		// TODO: specify input and output DIRECTORIES (not files)
-		FileInputFormat.setInputPaths(job, new Path("/in"));
-		FileOutputFormat.setOutputPath(job, new Path("/out"));
+		FileInputFormat.setInputPaths(job, new Path("hdfs://master.hadoop:9000/in"));
+		FileOutputFormat.setOutputPath(job, new Path("hdfs://master.hadoop:9000/out"));
 
 		if (!job.waitForCompletion(true))
 			return;

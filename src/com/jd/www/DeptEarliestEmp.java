@@ -90,7 +90,9 @@ public class DeptEarliestEmp {
 		@Override
 		protected void reduce(Text key, Iterable<Text> values, Context context)
 				throws IOException, InterruptedException {
-
+			for(Text value : values) {
+				
+			}
 		}
 		
 	}
