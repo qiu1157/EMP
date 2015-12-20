@@ -3,6 +3,10 @@ package com.jd.www;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,11 +90,23 @@ public class DeptEarliestEmp {
 	}
 
 	public static class MyReducer extends Reducer<Text, Text, Text, Text> {
-
+		DateFormat sdf = new SimpleDateFormat("dd-MM月-yy");
+		Date empEntryDate = null;
+		Date earliestDate = new Date();
 		@Override
 		protected void reduce(Text key, Iterable<Text> values, Context context)
-				throws IOException, InterruptedException {
+				throws IOException, InterruptedException {	
 			for(Text value : values) {
+				String[] str = value.toString().split("+");
+				try {
+					empEntryDate = sdf.parse(str[1]);
+					if(empEntryDate.compareTo(earliestDate) < 0) {
+						
+					}
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				
 			}
 		}
