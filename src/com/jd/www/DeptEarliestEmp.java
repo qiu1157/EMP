@@ -49,9 +49,6 @@ public class DeptEarliestEmp {
 	public static class MyMapper extends Mapper<Object, Text, Text, Text> {
 		Map<String, String> deptMap = new HashMap<String, String>();
 
-	public static class MyMapper extends Mapper<Object, Text, Text, Text> {
-		Map<String, String> deptMap = new HashMap<String, String>();
-
 		@Override
 		protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String[] columns = value.toString().split(",");
