@@ -38,35 +38,36 @@ public class DeptEarliestEmp {
 		FileOutputFormat.setOutputPath(job, new Path("/out"));
 
 		if (!job.waitForCompletion(true))
-			return;		
+			return;
 	}
+
 	public static void main(String[] args) throws Exception {
 		DeptEarliestEmp dee = new DeptEarliestEmp();
 		dee.run(args);
 	}
 
+	public static class MyMapper extends Mapper<Object, Text, Text, Text> {
+		Map<String, String> deptMap = new HashMap<String, String>();
 
 	public static class MyMapper extends Mapper<Object, Text, Text, Text> {
-		Map<String, String>deptMap = new HashMap<String, String>();
-		
+		Map<String, String> deptMap = new HashMap<String, String>();
+
 		@Override
-		protected void map(Object key, Text value, Context context)
-				throws IOException, InterruptedException {
+		protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
 			String[] columns = value.toString().split(",");
 			if (null == columns) {
 				context.getCounter("USERGROUPMAP", "columns is null").increment(1);
 				return;
 			}
-			
-			if(deptMap.containsKey(columns[7])) {
-				context.write(new Text(deptMap.get(columns[7])), new Text(columns[1]+"+"+columns[4]));
+
+			if (deptMap.containsKey(columns[7])) {
+				context.write(new Text(deptMap.get(columns[7])), new Text(columns[1] + "+" + columns[4]));
 			}
 		}
 
 		@SuppressWarnings("deprecation")
 		@Override
-		protected void setup(Context context)
-				throws IOException, InterruptedException {
+		protected void setup(Context context) throws IOException, InterruptedException {
 			BufferedReader in = null;
 			String line = null;
 			Path[] paths = context.getLocalCacheFiles();
@@ -78,38 +79,41 @@ public class DeptEarliestEmp {
 							deptMap.put(line.split(",")[0], line.split(",")[1]);
 						}
 					}
-				} 
+				}
 			} finally {
 				// TODO: handle finally clause
-				if(null != in) {
+				if (null != in) {
 					in.close();
 				}
 			}
 		}
-		
+
 	}
 
 	public static class MyReducer extends Reducer<Text, Text, Text, Text> {
-		DateFormat sdf = new SimpleDateFormat("dd-MM月-yy");
-		Date empEntryDate = null;
-		Date earliestDate = new Date();
+
 		@Override
 		protected void reduce(Text key, Iterable<Text> values, Context context)
-				throws IOException, InterruptedException {	
-			for(Text value : values) {
-				String[] str = value.toString().split("+");
+				throws IOException, InterruptedException {
+			DateFormat sdf = new SimpleDateFormat("dd-MM月-yy");
+			Date empEntryDate = null;
+			Date earliestDate = new Date();
+			String earliestEMP = null;
+			for (Text value : values) {
+				String[] str = value.toString().split("\\+");
 				try {
 					empEntryDate = sdf.parse(str[1]);
-					if(empEntryDate.compareTo(earliestDate) < 0) {
-						
+					if (empEntryDate.compareTo(earliestDate) < 0) {
+						earliestDate = empEntryDate;
+						earliestEMP = str[0];
 					}
 				} catch (ParseException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-				
 			}
+			context.write(key, new Text(earliestEMP+"\t"+sdf.format(earliestDate)));
 		}
-		
+
 	}
 }
