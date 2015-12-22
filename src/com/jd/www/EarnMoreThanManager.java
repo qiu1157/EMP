@@ -30,8 +30,9 @@ public class EarnMoreThanManager {
 		FileOutputFormat.setOutputPath(job, new Path("hdfs://master.hadoop:9000/out"));
 
 		if (!job.waitForCompletion(true))
-			return;		
+			return;
 	}
+
 	public static void main(String[] args) throws Exception {
 		EarnMoreThanManager emtm = new EarnMoreThanManager();
 		emtm.run(args);
@@ -48,20 +49,41 @@ public class EarnMoreThanManager {
 				String pid = columns[3];
 				String empName = columns[1];
 				String salary = columns[5];
-				context.write(new Text(pid), new Text("T1+"+empName+"+"+salary));
-				context.write(new Text(id), new Text("T2+"));
+				if ( ! ("".equals(pid)) || null != pid ) {
+					context.write(new Text(pid), new Text("T1+" + empName + "+" + salary));
+					context.write(new Text(id), new Text("T2+" + empName + "+" + salary));					
+				}
 			}
-			
+
 		}
 	}
-	
+
 	public static class MyReducer extends Reducer<Text, Text, Text, Text> {
 
 		@Override
 		protected void reduce(Text key, Iterable<Text> values, Context context)
 				throws IOException, InterruptedException {
-			// TODO Auto-generated method stub
+			String empName = "";
+			String magrName = "";
+			String empSalary = "0";
+			String magrSalary = "0";
 
+			for (Text value : values) {
+				String[] columns = value.toString().split("\\+");
+				if ("T1".equals(columns[0])) {
+					empName = columns[1];
+					empSalary = columns[2];
+					System.out.println("empSalary==" + empSalary);
+				} else if ("T2".equals(columns[0])) {
+					magrName = columns[1];
+					magrSalary = columns[2];
+					System.out.println("magrSalary==" + magrSalary);
+				}
+				if (!("".equals(magrName)) && (Integer.parseInt(empSalary) > Integer.parseInt(magrSalary))) {
+					context.write(new Text("empName: " + empName + " empSalary: " + empSalary),
+							new Text("magrName: " + magrName + " magrSalary: " + magrSalary));
+				}
+			}
 		}
 	}
 }
