@@ -47,6 +47,9 @@ public class HigherThanAveSalary {
 		protected void map(Object key, Text value, Context context)
 				throws IOException, InterruptedException {
 			String[] columns = value.toString().split(",");
+			/*Reduce阶段会sort后再reduce,
+			 * 所以设置reduce串行处理的时候,key值的设定很重要.
+			 */
 			context.write(new IntWritable(0), new Text(columns[5]));
 			context.write(new IntWritable(1), new Text(columns[1]+"+"+columns[5]));
 		}
