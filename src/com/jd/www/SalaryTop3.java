@@ -10,6 +10,13 @@
 package com.jd.www;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -42,8 +49,8 @@ public class SalaryTop3 {
 		job.setOutputValueClass(Text.class);
 
 		// TODO: specify input and output DIRECTORIES (not files)
-		FileInputFormat.setInputPaths(job, new Path("src"));
-		FileOutputFormat.setOutputPath(job, new Path("out"));
+		FileInputFormat.setInputPaths(job, new Path("hdfs://master.hadoop:9000/in/emp"));
+		FileOutputFormat.setOutputPath(job, new Path("hdfs://master.hadoop:9000/out"));
 
 		if (!job.waitForCompletion(true))
 			return;		
@@ -93,8 +100,28 @@ public class SalaryTop3 {
 		@Override
 		protected void reduce(Text key, Iterable<Text> values, Context context)
 				throws IOException, InterruptedException {
+			Map<String, Long> emp = new TreeMap<String, Long>();
+			for (Text value : values) {
+				emp.put(value.toString().split("\\+")[0], Long.parseLong(value.toString().split("\\+")[1]));
+			}
+			List<Map.Entry<String, Long>> list = new ArrayList<Map.Entry<String, Long>>(emp.entrySet());
+			Collections.sort(list, new Comparator<Map.Entry<String, Long>>() {
+
+				@Override
+				public int compare(Entry<String, Long> o1, Entry<String, Long> o2) {
+					// TODO Auto-generated method stub
+					return o2.getValue().compareTo(o1.getValue());
+				}
+			});
 			
+			int counter = 0;
+			for (Map.Entry<String, Long> mapping : list) {
+				counter++;
+				if(counter > 3) {
+					break;
+				}
+				context.write(new Text(mapping.getKey()), new Text(mapping.getValue()+""));
+			}
 		}
-		
 	}
 }
