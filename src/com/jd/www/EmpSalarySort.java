@@ -55,7 +55,7 @@ public class EmpSalarySort {
 				throws IOException, InterruptedException {
 			String[] columns = value.toString().split(",");
 			
-			if (null != columns || columns.length > 1) {
+			if (null != columns && columns.length > 1) {
 				System.out.println("columns.length==" +columns.length);
 				long salary = Long.parseLong("".equals(columns[5]) ? "0" : columns[5]);
 				long comm = Long.parseLong("".equals(columns[6])? "0" : columns[6]);
