@@ -113,8 +113,82 @@ public class MiddlePersonsCountForComm {
 			for (Text value : values) {
 				employeeList.add(value.toString().split(",")[0]);
 				employeeToManagerMap.put(value.toString().split(",")[0].trim(), value.toString().split(",")[1].trim());
+//				System.out.println("map=="+value.toString().split(",")[0].trim());
 			}
+		}
 
+		private int calculateDistance(int i, int j) {
+			String employeeA = employeeList.get(i);
+			String employeeB = employeeList.get(j);
+			int distance = 0;
+
+			if (employeeToManagerMap.get(employeeA).equals(employeeB)
+					|| employeeToManagerMap.get(employeeB).equals(employeeA)) {
+				distance = 0;
+			} else if (employeeToManagerMap.get(employeeA).equals(employeeToManagerMap.get(employeeB))) {
+				distance = 0;
+			} else {
+				List<String> employeeListA = new ArrayList<String>();
+				List<String> employeeListB = new ArrayList<String>();
+				employeeListA.add(employeeA);
+				String current = employeeA;
+//				System.out.println("init_current==" + current);
+//				System.out.println("Test==" + employeeToManagerMap.get(current));
+				while (!employeeToManagerMap.get(current).isEmpty()) {
+					current = employeeToManagerMap.get(current);
+//					System.out.println("A_current==" + current);
+					employeeListA.add(current);
+				}
+
+				employeeListB.add(employeeB);
+				current = employeeB;
+				
+				System.out.println("B_current=="+current);
+				while (!employeeToManagerMap.get(current).isEmpty()) {
+					current = employeeToManagerMap.get(current);
+//					System.out.println("B_current=="+current);
+//					System.out.println("boolean==" + employeeToManagerMap.get(current));
+					employeeListB.add(current);
+				}
+
+				int ii = 0, jj = 0;
+				String currentA, currentB;
+				boolean found = false;
+				for (ii = 0; ii < employeeListA.size(); ii++) {
+					currentA = employeeList.get(ii);
+					for (jj = 0; jj < employeeListB.size(); jj++) {
+						currentB = employeeListB.get(jj);
+						if (currentA.equals(currentB)) {
+							found = true;
+							break;
+						}
+					}
+
+					if (found) {
+						break;
+					}
+				}
+
+				distance = ii + jj - 1;
+			}
+			return distance;
+		}
+
+		/*
+		 * (非 Javadoc)  <p>Title: cleanup</p>  <p>Description: </p> 
+		 * 
+		 * @param context
+		 * 
+		 * @throws IOException
+		 * 
+		 * @throws InterruptedException 
+		 * 
+		 * @see org.apache.hadoop.mapreduce.Reducer#cleanup(org.apache.hadoop.
+		 * mapreduce.Reducer.Context) 
+		 */
+
+		@Override
+		protected void cleanup(Context context) throws IOException, InterruptedException {
 			int totalEmployee = employeeList.size();
 			int i, j;
 			int distance;
@@ -126,58 +200,5 @@ public class MiddlePersonsCountForComm {
 				}
 			}
 		}
-
-		private int calculateDistance(int i, int j) {
-			String employeeA = employeeList.get(i);
-			String employeeB = employeeList.get(j);
-			int distance = 0;
-			
-			if(employeeToManagerMap.get(employeeA).equals(employeeB) || employeeToManagerMap.get(employeeB).equals(employeeA)) {
-				distance = 0;
-			} else if(employeeToManagerMap.get(employeeA).equals(employeeToManagerMap.get(employeeB)) ) {
-				distance = 0;
-			}else {
-				List<String> employeeListA = new ArrayList<String>();
-				List<String> employeeListB = new ArrayList<String>();
-				employeeListA.add(employeeA);
-				String current = employeeA;
-				System.out.println("init_current=="+current);
-				System.out.println("Test=="+employeeToManagerMap.get(current));
-				while(false == employeeToManagerMap.get(current).isEmpty() ) {
-					current = employeeToManagerMap.get(current);
-					System.out.println("current=="+current);
-					employeeListA.add(current);
-				}
-				
-				employeeListB.add(employeeB);
-				current = employeeB;
-				while(false == employeeToManagerMap.get(employeeB).isEmpty()) {
-					current = employeeToManagerMap.get(current);
-					employeeListB.add(current);
-				}
-				
-				int ii = 0, jj =0;
-				String currentA, currentB;
-				boolean found = false;
-				for(ii = 0; ii<employeeListA.size(); ii++) {
-					currentA = employeeList.get(ii);
-					for(jj = 0; jj<employeeListB.size(); jj++) {
-						currentB = employeeListB.get(jj);
-						if (currentA.equals(currentB)) {
-							found = true;
-							break;
-						}
-					}
-					
-					if (found) {
-						break;
-					}
-				}
-				
-				distance = ii+jj -1;
-			}
-			return distance;
-		}
 	}
-
 }
