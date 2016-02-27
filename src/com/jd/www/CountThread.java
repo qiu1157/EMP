@@ -41,7 +41,7 @@ public class CountThread implements WritableComparable {
 	public int compareTo(Object object) {
 		// TODO Auto-generated method stub
 		return ((CountThread) object).cnt.compareTo(cnt) == 0 ? threadId.compareTo(((CountThread) object).threadId)
-				: ((CountThread) object).cnt.compareTo(cnt);
+				: ((CountThread) object).cnt.compareTo(cnt);	
 	}
 
 	
